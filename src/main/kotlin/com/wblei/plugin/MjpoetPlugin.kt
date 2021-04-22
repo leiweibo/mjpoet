@@ -44,12 +44,13 @@ class MjpoetPlugin: Plugin<Project> {
                         task.appPackageName = getPackageName((it as ApplicationVariant))
                     }
                     it.registerJavaGeneratingTask(mjTask.get(), javaDir)
+                    it.registerGeneratedResFolders(project.files(resDir).builtBy(mjTask))
                 }
             }
         }
     }
     
-    fun getPackageName(variant: ApplicationVariant):String? {
+    private fun getPackageName(variant: ApplicationVariant):String? {
         val sourceSets = variant.sourceSets
         var packageName : String? = null
         for (sourceSet in sourceSets) {

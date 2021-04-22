@@ -4,13 +4,20 @@ import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.JavaFile
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
+import com.wblei.plugin.layout.ConstraintLayout
+import com.wblei.plugin.widget.TextView
+import com.wblei.plugin.widget.Widget
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.TaskAction
+import org.gradle.platform.base.TypeBuilder
 import java.io.File
+import java.io.FileWriter
+import java.io.IOException
 import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.PRIVATE
 
 open class MjpoetTask : DefaultTask() {
   @Nested
@@ -48,6 +55,9 @@ open class MjpoetTask : DefaultTask() {
    * @param layoutName: layout name
    */
   private fun generateSingleClass(className: String, layoutName: String) {
+    
+    
+    
     var javaDir = File(outDir, "java")
     val packageName = "${config.packageBase}"
     val typeBuilder = TypeSpec.classBuilder(className)
@@ -61,12 +71,14 @@ open class MjpoetTask : DefaultTask() {
      .addStatement("super.onCreate(savedInstanceState)")
      .addStatement("setContentView(${rClassName}.layout.$layoutName)")
      .build())
+  
+    generateLayout(layoutName, typeBuilder, appPackageName!!)
     
     val fileBuilder = JavaFile.builder(packageName, typeBuilder.build())
     fileBuilder.build().writeTo(javaDir)
   }
   
-  private fun generateLayout(layoutName: String) {
+  private fun generateLayout(layoutName: String, typeBuilder: TypeSpec.Builder, appPackageName: String) {
     val resFile = File(outDir, "res/layout/${layoutName}.xml")
     if (!resFile.parentFile.exists()) {
       resFile.parentFile.mkdirs()
@@ -74,7 +86,18 @@ open class MjpoetTask : DefaultTask() {
     if (!resFile.exists()) {
       resFile.createNewFile()
     }
+  
+    val rClassName = ClassName.get(appPackageName, "R")
+    val writer = FileWriter(resFile)
+    val textView = TextView(typeBuilder, rClassName)
     
-    
+    try {
+      val constraintLayout = ConstraintLayout.constructLayout(mutableListOf(textView))
+      writer.write(constraintLayout)
+    } catch (e: IOException) {
+      print(e.message)
+    } finally {
+      writer?.close()
+    }
   }
 }
