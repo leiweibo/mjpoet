@@ -12,7 +12,7 @@ class TextView : Widget {
   override fun constructLayout(): String {
     val res = """
   <TextView
-    android:id="@+id/${resId}"
+    android:id="@+id/${getWidgetResId()}"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="Hello World!"
