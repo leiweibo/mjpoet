@@ -44,11 +44,11 @@ open class MjpoetTask : DefaultTask() {
    * generate the classes.
    */
   private fun generateJavaClasses() {
-    val currentTime = System.nanoTime()
-    val className = "AA${currentTime}Activity"
-    val layoutName = "${config.resPrefix}_${currentTime}"
-    
-    generateSingleClass(className, layoutName)
+      val currentTime = System.nanoTime()
+      val className = "AA${currentTime}Activity"
+      val layoutName = "${config.resPrefix}_${currentTime}"
+  
+      generateSingleClass(className, layoutName)
   }
   
   /**
@@ -72,14 +72,16 @@ open class MjpoetTask : DefaultTask() {
      .addStatement("setContentView(${rClassName}.layout.$layoutName)")
      .build())
   
+    // generate the layout and add setupXX method in the Activity.
     generateLayout(layoutName, typeBuilder)
+    writeManifestFile("${packageName}.$className")
     
     val fileBuilder = JavaFile.builder(packageName, typeBuilder.build())
     fileBuilder.build().writeTo(javaDir)
   }
   
   /**
-   * generate the layout.
+   * generate the layout and add related get the widget code into the Activity class.
    * @param layoutName: the layout name
    * @param typeBuilder: the typebuilder that add more method base on the added widget.
    */
@@ -105,5 +107,35 @@ open class MjpoetTask : DefaultTask() {
     } finally {
       writer?.close()
     }
+  }
+  
+  private fun writeManifestFile(fullActivityName: String) {
+  
+    var androidManifest = File(outDir, "AndroidManifest.xml")
+    if (!androidManifest.parentFile.exists()) {
+      androidManifest.parentFile.mkdirs()
+    }
+    if (!androidManifest.exists()) {
+      androidManifest.createNewFile()
+      androidManifest.writeText("""
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                             <application>
+                             
+                             </application>
+                        </manifest>
+                        """.trimIndent())
+    }
+    
+    val sb = StringBuilder()
+    androidManifest.forEachLine {
+      if (it.contains("</application>")) {
+        sb.append("\n\t\t<activity android:name=\"$fullActivityName\" />\n")
+      }
+      sb.append("$it\n")
+      if (it.contains("<application>")) {
+        sb.append("\n")
+      }
+    }
+    androidManifest.writeText(sb.toString())
   }
 }

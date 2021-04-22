@@ -21,13 +21,12 @@ object GenerateResourceHelper {
       stringResFile.parentFile.mkdirs()
     }
     if (!stringResFile.exists()) {
-      println("create file strings.xml: ${stringResFile.createNewFile()}")
+      stringResFile.createNewFile()
       stringResFile.writeText("<resources>\n</resources>")
     }
     val stringName = "$prefix${System.nanoTime()}"
     val sb = StringBuilder()
     stringResFile.forEachLine {
-      print("the content is: $it")
       if (it == "</resources>") {
         sb.append("\n\t<string name=\"$stringName\">${System.currentTimeMillis()}</string>\n")
       }

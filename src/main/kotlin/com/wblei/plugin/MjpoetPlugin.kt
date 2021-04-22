@@ -36,7 +36,8 @@ class MjpoetPlugin: Plugin<Project> {
                     var dir = File(project.buildDir, "generated/source/mj/${it.name}")
                     var javaDir = File(dir, "java")
                     var resDir = File(dir, "res")
-                    var manifestFile = File(dir, "AndroidManifest.xml")
+                    
+                    
                     
                     val mjTask = project.tasks.register("generate${it.name}MJCode", MjpoetTask::class.java) { task ->
                         task.config = mjpoetConfig
@@ -45,6 +46,13 @@ class MjpoetPlugin: Plugin<Project> {
                     }
                     it.registerJavaGeneratingTask(mjTask.get(), javaDir)
                     it.registerGeneratedResFolders(project.files(resDir).builtBy(mjTask))
+                    
+                    android.sourceSets.all {
+                        if (!it.manifest.srcFile.exists()) {
+                            var manifestFile = File(dir, "AndroidManifest.xml")
+                            it.manifest.srcFile(manifestFile)
+                        }
+                    }
                 }
             }
         }
