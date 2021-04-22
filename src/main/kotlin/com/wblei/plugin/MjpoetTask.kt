@@ -104,7 +104,7 @@ open class MjpoetTask : DefaultTask() {
     
     val rClassName = ClassName.get(appPackageName, "R")
     val writer = FileWriter(resFile)
-    val textView1 = RecyclerView(outDir, config.resPrefix, typeBuilder, rClassName)
+    val textView1 = ImageView(outDir, config.resPrefix, typeBuilder, rClassName)
     
     try {
       val constraintLayout = RelativeLayout.constructLayout(mutableListOf(textView1))
@@ -169,11 +169,16 @@ open class MjpoetTask : DefaultTask() {
       val typeBuilder = TypeSpec.classBuilder(className)
       typeBuilder.superclass(ClassName.get("android.app", "Activity"))
       typeBuilder.addModifiers(Modifier.PUBLIC)
-      typeBuilder.addMethod(MethodSpec.methodBuilder(methodName)
+  
+      val builder: MethodSpec.Builder = MethodSpec.methodBuilder(methodName)
        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
        .addParameters(paramList)
-       .addStatement("${stateSb}")
-       .build())
+       .addStatement("$stateSb")
+      
+      GenerateHelper.generateMethods(builder)
+      
+      typeBuilder.addMethod(
+       builder.build())
   
       val fileBuilder = JavaFile.builder(packageName, typeBuilder.build())
       fileBuilder.build().writeTo(javaDir)

@@ -3,7 +3,7 @@ package com.wblei.plugin.widget
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
-import com.wblei.plugin.GenerateResourceHelper
+import com.wblei.plugin.GenerateHelper
 import java.io.File
 import javax.lang.model.element.Modifier.PRIVATE
 
@@ -38,7 +38,7 @@ class Button : Widget {
    */
   constructor(outDir: File, stringPrefix: String, typeBuilder: TypeSpec.Builder,
    rClass: ClassName) {
-    val stringResId = GenerateResourceHelper.generateStringRes(outDir, stringPrefix)
+    val stringResId = GenerateHelper.generateStringRes(outDir, stringPrefix)
     val methodName = "aa${System.nanoTime()}"
     typeBuilder.addMethod(MethodSpec.methodBuilder("$methodName")
      .addModifiers(PRIVATE)

@@ -3,7 +3,7 @@ package com.wblei.plugin.widget
 import com.squareup.javapoet.ClassName
 import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.TypeSpec
-import com.wblei.plugin.GenerateResourceHelper
+import com.wblei.plugin.GenerateHelper
 import java.io.File
 import javax.lang.model.element.Modifier.PRIVATE
 
@@ -38,13 +38,14 @@ class ImageView : Widget {
    */
   constructor(outDir: File, stringPrefix: String, typeBuilder: TypeSpec.Builder,
    rClass: ClassName) {
-    val stringResId = GenerateResourceHelper.generateStringRes(outDir, stringPrefix)
+    val imgResId = GenerateHelper.generateDrawable(outDir, stringPrefix)
     val methodName = "aa${System.nanoTime()}"
     typeBuilder.addMethod(MethodSpec.methodBuilder("$methodName")
      .addModifiers(PRIVATE)
      .addStatement("\$T iv = findViewById(\$T.id.${resId});",
       ClassName.get("android.widget", "ImageView"), rClass)
      .addStatement("iv.setScaleType(ImageView.ScaleType.CENTER_CROP)")
+     .addStatement("iv.setImageResource(\$T.drawable.${imgResId})", rClass)
      .build())
     
     val methodSpecs = typeBuilder.methodSpecs
