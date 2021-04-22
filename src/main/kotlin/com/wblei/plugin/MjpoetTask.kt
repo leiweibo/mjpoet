@@ -26,6 +26,7 @@ open class MjpoetTask : DefaultTask() {
   @Input
   var appPackageName: String? = ""
   
+  // the generated files out put folder.
   @OutputDirectories
   lateinit var outDir: File
   
@@ -43,8 +44,9 @@ open class MjpoetTask : DefaultTask() {
    * generate the classes.
    */
   private fun generateJavaClasses() {
-    val className = "TestActivity"
-    val layoutName = "activity_test"
+    val currentTime = System.nanoTime()
+    val className = "AA${currentTime}Activity"
+    val layoutName = "${config.resPrefix}_${currentTime}"
     
     generateSingleClass(className, layoutName)
   }
@@ -55,8 +57,6 @@ open class MjpoetTask : DefaultTask() {
    * @param layoutName: layout name
    */
   private fun generateSingleClass(className: String, layoutName: String) {
-    
-    
     
     var javaDir = File(outDir, "java")
     val packageName = "${config.packageBase}"
@@ -72,13 +72,18 @@ open class MjpoetTask : DefaultTask() {
      .addStatement("setContentView(${rClassName}.layout.$layoutName)")
      .build())
   
-    generateLayout(layoutName, typeBuilder, appPackageName!!)
+    generateLayout(layoutName, typeBuilder)
     
     val fileBuilder = JavaFile.builder(packageName, typeBuilder.build())
     fileBuilder.build().writeTo(javaDir)
   }
   
-  private fun generateLayout(layoutName: String, typeBuilder: TypeSpec.Builder, appPackageName: String) {
+  /**
+   * generate the layout.
+   * @param layoutName: the layout name
+   * @param typeBuilder: the typebuilder that add more method base on the added widget.
+   */
+  private fun generateLayout(layoutName: String, typeBuilder: TypeSpec.Builder) {
     val resFile = File(outDir, "res/layout/${layoutName}.xml")
     if (!resFile.parentFile.exists()) {
       resFile.parentFile.mkdirs()
@@ -89,10 +94,11 @@ open class MjpoetTask : DefaultTask() {
   
     val rClassName = ClassName.get(appPackageName, "R")
     val writer = FileWriter(resFile)
-    val textView = TextView(typeBuilder, rClassName)
+    val textView1 = TextView(outDir, config.resPrefix, typeBuilder, rClassName)
+    val textView2 = TextView(outDir, config.resPrefix, typeBuilder, rClassName)
     
     try {
-      val constraintLayout = ConstraintLayout.constructLayout(mutableListOf(textView))
+      val constraintLayout = ConstraintLayout.constructLayout(mutableListOf(textView1, textView2))
       writer.write(constraintLayout)
     } catch (e: IOException) {
       print(e.message)

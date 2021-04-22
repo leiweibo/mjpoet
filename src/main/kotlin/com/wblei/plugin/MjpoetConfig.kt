@@ -4,7 +4,7 @@ import org.gradle.api.tasks.Input
 
 open class MjpoetConfig {
   @Input var variants: ArrayList<String> = arrayListOf()
-  @Input var packageBase:String = ""
+  @Input var packageBase:String = "" // generated class package name.
   @Input var packageCount: Int = 0
   @Input var activityCountPerPkg: Int = 0
   @Input var excludeActivityJavaFile:Boolean = false
