@@ -6,6 +6,12 @@ import com.squareup.javapoet.MethodSpec
 import com.squareup.javapoet.ParameterSpec
 import com.squareup.javapoet.TypeSpec
 import com.wblei.plugin.layout.ConstraintLayout
+import com.wblei.plugin.layout.FrameLayout
+import com.wblei.plugin.layout.LinearLayout
+import com.wblei.plugin.layout.RelativeLayout
+import com.wblei.plugin.widget.Button
+import com.wblei.plugin.widget.ImageView
+import com.wblei.plugin.widget.RecyclerView
 import com.wblei.plugin.widget.TextView
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
@@ -98,10 +104,10 @@ open class MjpoetTask : DefaultTask() {
     
     val rClassName = ClassName.get(appPackageName, "R")
     val writer = FileWriter(resFile)
-    val textView1 = TextView(outDir, config.resPrefix, typeBuilder, rClassName)
+    val textView1 = RecyclerView(outDir, config.resPrefix, typeBuilder, rClassName)
     
     try {
-      val constraintLayout = ConstraintLayout.constructLayout(mutableListOf(textView1))
+      val constraintLayout = RelativeLayout.constructLayout(mutableListOf(textView1))
       writer.write(constraintLayout)
     } catch (e: IOException) {
       print(e.message)
