@@ -2,30 +2,51 @@ package com.wblei.plugin.transform
 
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Opcodes.*
 
 class LifecycleOnCreateMethodVisitor(mv: MethodVisitor) : MethodVisitor(Opcodes.ASM4, mv) {
-
-    override fun visitCode() {
-        //方法执行前插入
-        mv.visitLdcInsn("TAG")
-        mv.visitTypeInsn(Opcodes.NEW, "java/lang/StringBuilder")
-        mv.visitInsn(Opcodes.DUP)
-        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false)
-        mv.visitLdcInsn("-------> onCreate : ")
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
-        mv.visitVarInsn(Opcodes.ALOAD, 0)
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false)
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getSimpleName", "()Ljava/lang/String;", false)
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false)
-        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false)
-        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "android/util/Log", "i", "(Ljava/lang/String;Ljava/lang/String;)I", false)
-        mv.visitInsn(Opcodes.POP)
-
-        super.visitCode()
-        //方法执行后插入
+  
+  //方法开始,此处可在方法开始插入字节码
+  override fun visitCode() {
+    super.visitCode()
+    println("visit code")
+    mv.visitLdcInsn("MainActivity");
+    mv.visitLdcInsn("ttt");
+    mv.visitMethodInsn(
+     INVOKESTATIC,
+     "android/util/Log",
+     "i",
+     "(Ljava/lang/String;Ljava/lang/String;)I",
+     false
+    );
+    mv.visitInsn(POP);
+    
+  }
+  
+  //指令操作,这里可以判断拦截return,并在方法尾部插入字节码
+  override fun visitInsn(opcode: Int) {
+    if (opcode == ARETURN || opcode == RETURN) {
+      mv.visitLdcInsn("MainActivity");
+      mv.visitLdcInsn("tttInsn");
+      mv.visitMethodInsn(
+       INVOKESTATIC,
+       "android/util/Log",
+       "i",
+       "(Ljava/lang/String;Ljava/lang/String;)I",
+       false
+      );
+      mv.visitInsn(POP);
     }
-
-    override fun visitInsn(opcode: Int) {
-        super.visitInsn(opcode)
-    }
+    super.visitInsn(opcode)
+  }
+  
+  //方法栈深度
+  override fun visitMaxs(maxStack: Int, maxLocals: Int) {
+    super.visitMaxs(maxStack, maxLocals)
+  }
+  
+  //方法结束回调
+  override fun visitEnd() {
+    super.visitEnd()
+  }
 }

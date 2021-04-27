@@ -22,42 +22,42 @@ class MjpoetPlugin: Plugin<Project> {
         var android = project.extensions.getByType(AppExtension::class.java)
         android ?: throw IllegalArgumentException("The plugin can only used in android project.")
         
-        android.registerTransform(MjPoetTransform())
+//        android.registerTransform(MjPoetTransform())
         // create the an extension for plugin.
-//        val mjpoetConfig = project.extensions.create("mjpoet", MjpoetConfig::class.java)
-//        project.afterEvaluate {
-//            android.applicationVariants.all {
-//                val mjpoet = project.extensions.getByName("mjpoet") as MjpoetConfig
-//                if (it.name in mjpoet.variants) {
-//
-////                    print("hello wrold......\n")
-////                    println(mjpoet.packageBase)
-////                    println(it.name)
-////                    println((it as ApplicationVariant).sourceSets)
-//
-//                    var dir = File(project.buildDir, "generated/source/mj/${it.name}")
-//                    var javaDir = File(dir, "java")
-//                    var resDir = File(dir, "res")
-//
-//
-//
-//                    val mjTask = project.tasks.register("generate${it.name}MJCode", MjpoetTask::class.java) { task ->
-//                        task.config = mjpoetConfig
-//                        task.outDir = dir
-//                        task.appPackageName = getPackageName((it as ApplicationVariant))
-//                    }
-//                    it.registerJavaGeneratingTask(mjTask.get(), javaDir)
-//                    it.registerGeneratedResFolders(project.files(resDir).builtBy(mjTask))
-//
-//                    android.sourceSets.all {
-//                        if (!it.manifest.srcFile.exists()) {
-//                            var manifestFile = File(dir, "AndroidManifest.xml")
-//                            it.manifest.srcFile(manifestFile)
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        val mjpoetConfig = project.extensions.create("mjpoet", MjpoetConfig::class.java)
+        project.afterEvaluate {
+            android.applicationVariants.all {
+                val mjpoet = project.extensions.getByName("mjpoet") as MjpoetConfig
+                if (it.name in mjpoet.variants) {
+
+//                    print("hello wrold......\n")
+//                    println(mjpoet.packageBase)
+//                    println(it.name)
+//                    println((it as ApplicationVariant).sourceSets)
+
+                    var dir = File(project.buildDir, "generated/source/mj/${it.name}")
+                    var javaDir = File(dir, "java")
+                    var resDir = File(dir, "res")
+
+
+
+                    val mjTask = project.tasks.register("generate${it.name}MJCode", MjpoetTask::class.java) { task ->
+                        task.config = mjpoetConfig
+                        task.outDir = dir
+                        task.appPackageName = getPackageName((it as ApplicationVariant))
+                    }
+                    it.registerJavaGeneratingTask(mjTask.get(), javaDir)
+                    it.registerGeneratedResFolders(project.files(resDir).builtBy(mjTask))
+
+                    android.sourceSets.all {
+                        if (!it.manifest.srcFile.exists()) {
+                            var manifestFile = File(dir, "AndroidManifest.xml")
+                            it.manifest.srcFile(manifestFile)
+                        }
+                    }
+                }
+            }
+        }
     }
     
     private fun getPackageName(variant: ApplicationVariant):String? {

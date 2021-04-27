@@ -5,37 +5,38 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 
 class LifecycleClassVisitor(cv: ClassVisitor) : ClassVisitor(Opcodes.ASM5, cv), Opcodes {
-
-    private var mClassName: String? = null
-
-    override fun visit(version: Int, access: Int, name: String, signature: String,
-                       superName: String, interfaces: Array<String>) {
-        println("LifecycleClassVisitor : visit -----> started ：$name")
-        this.mClassName = name
+    
+    private var className: String? = null
+    
+    //类入口
+    override fun visit(
+     version: Int,
+     access: Int,
+     name: String?,
+     signature: String?,
+     superName: String?,
+     interfaces: Array<out String>?
+    ) {
         super.visit(version, access, name, signature, superName, interfaces)
+        className = name
+        println("visit name:$name")
     }
-
-    override fun visitMethod(access: Int, name: String, desc: String,
-                             signature: String, exceptions: Array<String>): MethodVisitor {
-        println("LifecycleClassVisitor : visitMethod : $name")
-        val mv = cv.visitMethod(access, name, desc, signature, exceptions)
-        //匹配FragmentActivity
-        if ("android/support/v4/app/FragmentActivity" == this.mClassName) {
-            if ("onCreate" == name) {
-                //处理onCreate
-                return LifecycleOnCreateMethodVisitor(mv)
-            }
-//            else if ("onDestroy" == name) {
-//                //处理onDestroy
-//                return LifecycleOnDestroyMethodVisitor(mv)
-//            }
+    
+    //类中方法的入口
+    override fun visitMethod(
+     access: Int,
+     name: String?,
+     descriptor: String?,
+     signature: String?,
+     exceptions: Array<out String>?
+    ): MethodVisitor {
+        val result =  super.visitMethod(access, name, descriptor, signature, exceptions)
+        println("visitMethod name:$name")
+        if (className == "com/wblei/trygradle/MainActivity" && name == "onCreate") {//过滤需要操作的类名和方法名
+            //替换成自定义的方法扫描
+            return LifecycleOnCreateMethodVisitor(result)
         }
-        return mv
-    }
-
-    override fun visitEnd() {
-        println("LifecycleClassVisitor : visit -----> end")
-        super.visitEnd()
+        return result
     }
     // https://blog.csdn.net/zhongweijian/article/details/7861460
     // https://www.jianshu.com/p/16ed4d233fd1

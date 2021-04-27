@@ -53,7 +53,7 @@ open class MjpoetTask : DefaultTask() {
    * generate the classes.
    */
   private fun generateJavaClasses() {
-    var packageCnt = (50..100).random()
+    var packageCnt = (30..60).random()
     statisticPackageCount = packageCnt
     for (i in 1..packageCnt) {
       generateClassInSinglePkg()
@@ -78,8 +78,9 @@ open class MjpoetTask : DefaultTask() {
     // Generate 5-10 random activities in every package.
     for (i in 0..activitiesCnt) {
   
+      val activityPrefix = ('A'..'Z').map { it }.shuffled().subList(0, (1..3).random()).joinToString("")
       val currentTime = System.nanoTime()
-      val className = "AA${currentTime}Activity"
+      val className = "$activityPrefix${currentTime}Activity"
       val layoutName = "${config.resPrefix}_${currentTime}"
       
       val typeBuilder = TypeSpec.classBuilder(className)
@@ -104,6 +105,8 @@ open class MjpoetTask : DefaultTask() {
       fileBuilder.build().writeTo(javaDir)
     }
   }
+  
+  
   
   /**
    * generate the layout and add related get the widget code into the Activity class.
@@ -217,7 +220,7 @@ open class MjpoetTask : DefaultTask() {
     for (i in 0..helpClazzCnt) {
       var javaDir = File(outDir, "java")
       val methodName = "a${System.nanoTime()}"
-      val className = "A${System.nanoTime()}Helper"
+      val className = "M${System.nanoTime()}Helper"
   
       val (paramList, defaultValueList, parameterNameList) = generateParameterSpecList()
   

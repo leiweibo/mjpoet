@@ -40,15 +40,15 @@ class MjPoetTransform : Transform() {
         //OutputProvider管理输出路径，如果消费型输入为空，你会发现OutputProvider == null
         val outputProvider = transformInvocation.outputProvider
         for (input in inputs) {
-            for (jarInput in input.jarInputs) {
-                val dest: File = outputProvider.getContentLocation(
-                        jarInput.file.absolutePath,
-                        jarInput.contentTypes,
-                        jarInput.scopes,
-                        Format.JAR)
-                //将修改过的字节码copy到dest，就可以实现编译期间干预字节码的目的了
-                FileUtils.copyFile(jarInput.file, dest)
-            }
+//            for (jarInput in input.jarInputs) {
+//                val dest: File = outputProvider.getContentLocation(
+//                        jarInput.file.absolutePath,
+//                        jarInput.contentTypes,
+//                        jarInput.scopes,
+//                        Format.JAR)
+//                //将修改过的字节码copy到dest，就可以实现编译期间干预字节码的目的了
+//                FileUtils.copyFile(jarInput.file, dest)
+//            }
             for (directoryInput in input.directoryInputs) {
 //                val dest: File = outputProvider.getContentLocation(directoryInput.name,
 //                        directoryInput.contentTypes, directoryInput.scopes,
@@ -64,17 +64,16 @@ class MjPoetTransform : Transform() {
     /**
      * 处理文件目录下的class文件
      */
-    fun handleDirectoryInput(directoryInput: DirectoryInput, outputProvider: TransformOutputProvider) {
+    private fun handleDirectoryInput(directoryInput: DirectoryInput, outputProvider: TransformOutputProvider) {
         //是否是目录
-        if (directoryInput.file.isDirectory()) {
+        if (directoryInput.file.isDirectory) {
             //列出目录所有文件（包含子文件夹，子文件夹内文件）
             directoryInput.file.walkTopDown().forEach { file ->
                 var name = file.name
-                if (name.endsWith(".class") && !name.startsWith("R\$")
-                        && !"R.class".equals(name) && !"BuildConfig.class".equals(name)
-                        && "android/support/v4/app/FragmentActivity.class".equals(name)) {
-
-                    print("----deal with class file $name ----")
+//                println("deal with the file:${file.name}")
+                if (name.endsWith("class") && !"BuildConfig.class".equals(name)) {
+                    
+                    println("deal with class file ${file.absolutePath}")
                     val classReader = ClassReader(file.readBytes())
                     val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
                     val cv = LifecycleClassVisitor(classWriter)
