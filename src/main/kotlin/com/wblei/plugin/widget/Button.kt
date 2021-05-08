@@ -37,15 +37,27 @@ class Button : Widget {
    * add a setupText() method for TextView widget.
    */
   constructor(outDir: File, stringPrefix: String, typeBuilder: TypeSpec.Builder,
-   rClass: ClassName) {
+   rClass: ClassName, nextActivityClazzName: StringBuilder) {
     val stringResId = GenerateHelper.generateStringRes(outDir, stringPrefix)
     val methodName = "aa${System.nanoTime()}"
-    typeBuilder.addMethod(MethodSpec.methodBuilder("$methodName")
+    val methodBuilder: MethodSpec.Builder = MethodSpec.methodBuilder("$methodName")
      .addModifiers(PRIVATE)
-     .addStatement("\$T tv = findViewById(\$T.id.${resId});",
+     .addStatement("\$T btn = findViewById(\$T.id.${resId});",
       ClassName.get("android.widget", "Button"), rClass)
-     .addStatement("tv.setText(\$T.string.${stringResId})", rClass)
-     .build())
+     .addStatement("btn.setText(\$T.string.${stringResId})", rClass)
+    
+    if (!nextActivityClazzName.isNullOrEmpty()) {
+      val intentStr = "\$T intent = new Intent(this, $nextActivityClazzName.class);"
+      methodBuilder.addStatement(
+       """
+         btn.setOnClickListener(view -> {
+            $intentStr
+            startActivity(intent);
+          })
+       """.trimIndent(), ClassName.get("android.content", "Intent")
+      )
+    }
+    typeBuilder.addMethod(methodBuilder.build())
     
     val methodSpecs = typeBuilder.methodSpecs
     // insert and setupText() method in onCreate() method.

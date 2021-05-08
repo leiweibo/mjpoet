@@ -11,7 +11,7 @@ open class MjpoetConfig {
   @Input var methodCountPerClass = 0
   @Input var otherCountPerPackage = 0
   @Input var resPrefix: String = "mj_"
-  @Input var drawableCount: Int = 0
+  @Input var drawableCount: Int = 10
   @Input var stringCount: Int = 0
   
 }

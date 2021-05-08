@@ -37,16 +37,28 @@ class ImageView : Widget {
    * add a setupText() method for TextView widget.
    */
   constructor(outDir: File, stringPrefix: String, typeBuilder: TypeSpec.Builder,
-   rClass: ClassName) {
+   rClass: ClassName, nextActivityClazzName: StringBuilder) {
     val imgResId = GenerateHelper.generateDrawable(outDir, stringPrefix)
     val methodName = "aa${System.nanoTime()}"
-    typeBuilder.addMethod(MethodSpec.methodBuilder("$methodName")
+    var methodBuilder: MethodSpec.Builder = MethodSpec.methodBuilder("$methodName")
      .addModifiers(PRIVATE)
      .addStatement("\$T iv = findViewById(\$T.id.${resId});",
       ClassName.get("android.widget", "ImageView"), rClass)
      .addStatement("iv.setScaleType(ImageView.ScaleType.CENTER_CROP)")
      .addStatement("iv.setImageResource(\$T.drawable.${imgResId})", rClass)
-     .build())
+    if (!nextActivityClazzName.isNullOrEmpty()) {
+      val intentStr = "\$T intent = new Intent(this, $nextActivityClazzName.class);"
+      methodBuilder.addStatement(
+       """
+         iv.setOnClickListener(view -> {
+            $intentStr
+            startActivity(intent);
+          })
+       """.trimIndent(), ClassName.get("android.content", "Intent")
+      )
+    }
+    
+    typeBuilder.addMethod(methodBuilder.build())
     
     val methodSpecs = typeBuilder.methodSpecs
     // insert and setupText() method in onCreate() method.

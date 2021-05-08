@@ -48,12 +48,13 @@ open class MjpoetTask : DefaultTask() {
   private var statisticActivityCount = 0
   private var statisticWidgetCountInLayout = 0
   private var statisticHelperCount = 0
+  private var drawableCount = 0
   
   /**
    * generate the classes.
    */
   private fun generateJavaClasses() {
-    var packageCnt = (30..60).random()
+    var packageCnt = (3..5).random()
     statisticPackageCount = packageCnt
     for (i in 1..packageCnt) {
       generateClassInSinglePkg()
@@ -63,6 +64,7 @@ open class MjpoetTask : DefaultTask() {
     println("activity count: $statisticActivityCount")
     println("widget count: $statisticWidgetCountInLayout")
     println("helper class count: $statisticHelperCount")
+    println("drawable count: $drawableCount")
   }
   
   /**
@@ -73,16 +75,27 @@ open class MjpoetTask : DefaultTask() {
     var javaDir = File(outDir, "java")
     val packageName = "${config.packageBase}.P${System.currentTimeMillis()}"
     
-    var activitiesCnt = (5..15).random()
+    var activitiesCnt = (3..6).random()
     statisticActivityCount += activitiesCnt
+    val activityNameList = mutableListOf<String>()
     // Generate 5-10 random activities in every package.
-    for (i in 0..activitiesCnt) {
+    for (i in 1..activitiesCnt) {
   
       val activityPrefix = ('A'..'Z').map { it }.shuffled().subList(0, (1..3).random()).joinToString("")
       val currentTime = System.nanoTime()
       val className = "$activityPrefix${currentTime}Activity"
-      val layoutName = "${config.resPrefix}_${currentTime}"
+      activityNameList.add(className)
+    }
+    println("the activity name list: $activityNameList")
+    activityNameList.sort()
+    for (i in 1..activitiesCnt) {
+  
+      val currentTime = System.nanoTime()
+      var className = activityNameList[i - 1]
+      var nextActivityName:String = if (i == activitiesCnt) ""  else activityNameList[i]
       
+      val layoutName = "${config.resPrefix}_${currentTime}"
+  
       val typeBuilder = TypeSpec.classBuilder(className)
       typeBuilder.superclass(ClassName.get("android.app", "Activity"))
       typeBuilder.addModifiers(Modifier.PUBLIC)
@@ -96,7 +109,7 @@ open class MjpoetTask : DefaultTask() {
        .build())
   
       // generate the layout and add setupXX method in the Activity.
-      generateLayout(layoutName, typeBuilder)
+      generateLayout(layoutName, typeBuilder, nextActivityName)
       writeManifestFile("${packageName}.$className")
   
       generateHelperClasses(packageName, typeBuilder)
@@ -112,8 +125,10 @@ open class MjpoetTask : DefaultTask() {
    * generate the layout and add related get the widget code into the Activity class.
    * @param layoutName: the layout name
    * @param typeBuilder: the typebuilder that add more method base on the added widget.
+   * @param nextActivityClazzName: the next activity activity, if it's not empty or null, will add a
+   *                               statement of setOnClickListener()
    */
-  private fun generateLayout(layoutName: String, typeBuilder: TypeSpec.Builder) {
+  private fun generateLayout(layoutName: String, typeBuilder: TypeSpec.Builder, nextActivityClazzName: String) {
     val resFile = File(outDir, "res/layout/${layoutName}.xml")
     if (!resFile.parentFile.exists()) {
       resFile.parentFile.mkdirs()
@@ -128,19 +143,20 @@ open class MjpoetTask : DefaultTask() {
     try {
       when((0..3).random()) {
         0 ->  {
-          val constraintLayout = RelativeLayout.constructLayout(getChildViews(typeBuilder, rClassName))
+          val constraintLayout = RelativeLayout.constructLayout(getChildViews(typeBuilder, rClassName, nextActivityClazzName))
           writer.write(constraintLayout)
         }
         1 ->  {
-          val constraintLayout = LinearLayout.constructLayout(getChildViews(typeBuilder, rClassName))
+          val constraintLayout = LinearLayout.constructLayout(getChildViews(typeBuilder, rClassName, nextActivityClazzName))
           writer.write(constraintLayout)
         }
         2-> {
-          val constraintLayout = FrameLayout.constructLayout(getChildViews(typeBuilder, rClassName))
+          config.drawableCount
+          val constraintLayout = FrameLayout.constructLayout(getChildViews(typeBuilder, rClassName, nextActivityClazzName))
           writer.write(constraintLayout)
         }
         3 -> {
-          val constraintLayout = ConstraintLayout.constructLayout(getChildViews(typeBuilder, rClassName))
+          val constraintLayout = ConstraintLayout.constructLayout(getChildViews(typeBuilder, rClassName, nextActivityClazzName))
           writer.write(constraintLayout)
         }
       }
@@ -154,26 +170,34 @@ open class MjpoetTask : DefaultTask() {
   }
   
   // generate random views
-  private fun getChildViews(typeBuilder: TypeSpec.Builder, rClassName:ClassName): MutableList<Widget> {
+  private fun getChildViews(typeBuilder: TypeSpec.Builder, rClassName:ClassName, nextActivityClazzName: String): MutableList<Widget> {
     val randomChildCnt = (2..5).random()
     val children = mutableListOf<Widget>()
     statisticWidgetCountInLayout += randomChildCnt
+    val nextActivityClazzNameInBuilder = StringBuilder(nextActivityClazzName)
     for (i in 1..randomChildCnt) {
       val randomPos = (0..3).random()
       when(randomPos) {
         0 -> {
-          children.add(TextView(outDir, config.resPrefix, typeBuilder, rClassName))
+              children.add(TextView(outDir, config.resPrefix, typeBuilder, rClassName, nextActivityClazzNameInBuilder))
         }
         1 -> {
-          children.add(Button(outDir, config.resPrefix, typeBuilder, rClassName))
+          children.add(Button(outDir, config.resPrefix, typeBuilder, rClassName, nextActivityClazzNameInBuilder))
         }
         2 -> {
-          children.add(ImageView(outDir, config.resPrefix, typeBuilder, rClassName))
+          if (drawableCount < config.drawableCount) {
+            drawableCount ++
+            children.add(ImageView(outDir, config.resPrefix, typeBuilder, rClassName, nextActivityClazzNameInBuilder))
+          } else {
+            children.add(TextView(outDir, config.resPrefix, typeBuilder, rClassName, nextActivityClazzNameInBuilder))
+          }
         }
         3 -> {
-          children.add(RecyclerView(outDir, config.resPrefix, typeBuilder, rClassName))
+          children.add(RecyclerView(outDir, config.resPrefix, typeBuilder, rClassName, nextActivityClazzNameInBuilder))
         }
       }
+  
+      nextActivityClazzNameInBuilder.clear()
     }
     return children
   }
@@ -215,7 +239,7 @@ open class MjpoetTask : DefaultTask() {
    * Generate helper by random, 20 at most.
    */
   private fun generateHelperClasses(packageName: String, activityTypeBuilder: TypeSpec.Builder) {
-    val helpClazzCnt = (5..10).random()
+    val helpClazzCnt = (1..2).random()
     statisticHelperCount += helpClazzCnt
     for (i in 0..helpClazzCnt) {
       var javaDir = File(outDir, "java")

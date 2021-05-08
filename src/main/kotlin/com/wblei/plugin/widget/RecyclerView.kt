@@ -35,13 +35,26 @@ class RecyclerView : Widget {
    * add a setupText() method for TextView widget.
    */
   constructor(outDir: File, stringPrefix: String, typeBuilder: TypeSpec.Builder,
-   rClass: ClassName) {
+   rClass: ClassName, nextActivityClazzName: StringBuilder) {
     val methodName = "aa${System.nanoTime()}"
-    typeBuilder.addMethod(MethodSpec.methodBuilder("$methodName")
+    val methodBuilder = MethodSpec.methodBuilder("$methodName")
      .addModifiers(PRIVATE)
-     .addStatement("\$T tv = findViewById(\$T.id.${resId});",
+     .addStatement("\$T rv = findViewById(\$T.id.${resId});",
       ClassName.get("androidx.recyclerview.widget", "RecyclerView"), rClass)
-     .build())
+  
+    if (!nextActivityClazzName.isNullOrEmpty()) {
+      val intentStr = "\$T intent = new Intent(this, $nextActivityClazzName.class);"
+      methodBuilder.addStatement(
+       """
+         rv.setOnClickListener(view -> {
+            $intentStr
+            startActivity(intent);
+          })
+       """.trimIndent(), ClassName.get("android.content", "Intent")
+      )
+    }
+    
+    typeBuilder.addMethod(methodBuilder.build())
     
     val methodSpecs = typeBuilder.methodSpecs
     // insert and setupText() method in onCreate() method.
